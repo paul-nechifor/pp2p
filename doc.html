@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ro">
+<meta charset="UTF-8"/>
+<head><title>PP2P de Paul Nechifor (1B)</title></head>
+<body>
+
+<h1>PP2P</h1>
+<h3>de Paul Răzvan Nechifor (1B)</h3>
+
+<p>Proiectul meu are două programe: serverul și clientul (care înclude și un server pentru transmiterea fișierelor într-un thread separat). Comunicarea dintre client și server se realizează prin XML. În plus setările clientului sunt salvate într-un fișier XML.</p>
+
+<h2>Serverul</h2>
+
+<p>Este un program C++ din consolă care folosește Qt pentru XML și expresii regulate. Serverul are rolul cel mai simplu. El intră într-o buclă infinită cu <code>select()</code> în care așteaptă să se conecteze un client sau să primească o cerere de căutare de fișiere de la un client.</p>
+
+<p>Când se conectează un client, acesta trasmite lista lui de fișiere. Exemplu:</p>
+
+<pre>
+&lt;conectare nume=&quot;Paul2&quot; port=&quot;1337&quot;&gt;<br/>    &lt;fisier marime=&quot;5106521&quot; md5=&quot;cbb9d1dc16378639d0877dbd75e676b3&quot; locatie=&quot;/home/p/audio/muzic&#x0103;/melodii/Carl Orff - O Fortuna.mp3&quot; /&gt;<br/>    &lt;fisier marime=&quot;4339429&quot; md5=&quot;f035856e998fa97c444a58668cb21c44&quot; locatie=&quot;/home/p/audio/muzic&#x0103;/melodii/Elvis Presley - Suspicious Minds.mp3&quot; /&gt;<br/>    &lt;fisier marime=&quot;9845479&quot; md5=&quot;eb9acbafae92f16f4ec7093fb5211a5e&quot; locatie=&quot;/home/p/audio/muzic&#x0103;/melodii/Franz Schubert - Ellen dritter Gesang (Ave Maria).mp3&quot; /&gt;<br/>    &lt;fisier marime=&quot;16354479&quot; md5=&quot;92be82e6b1f424f6334d077d5637764e&quot; locatie=&quot;/home/p/audio/muzic&#x0103;/melodii/Iron Butterfly - In A Gadda Da Vida.mp3&quot; /&gt;<br/>    &lt;fisier marime=&quot;3564726&quot; md5=&quot;f410d9d13387c322a4e2275eafaf9601&quot; locatie=&quot;/home/p/audio/muzic&#x0103;/melodii/Young Ewing Allison - Derelict.mp3&quot; /&gt;<br/>&lt;/conectare&gt;
+</pre>
+
+<p>Clientul va fi adăugat într-o listă. Singura modalitate de a comunica cu serverul este de a transmite o căutare. Se poate căuta după MD5 sau după nume și mărime. Dacă clientul vrea toate fișierele cu un anumit MD5 trimite spre exemplu <code>&lt;cauta md5=&quot;eb9acbafae92f16f4ec7093fb5211a5e&quot; /&gt;</code>. Dacă vrea după nume sau mărime trimite ceva de forma <code>&lt;cauta nume=&quot;[REGEX]&quot; interval=&quot;[INTERVAL]&quot; /&gt;</code>. <code>[REGEX]</code> este o expresie regulată și [INTERVAL] este un intervalul de mărime a fișierelor. Poate fi de forma „-x” (mai mic de x octeți), „x-” (mai mare de x octeți) sau „x-y” (între x și y octeți). Se poate căuta doar după nume sau mărime, dar dacă se caută după MD5 nu se pot folosi celelalte.</p>
+
+<p>Dacă a găsit rezultate serverul transmite ceva de genul:</p>
+
+<pre>
+&lt;rezultate&gt;<br/>  &lt;client nume=&quot;Paul&quot; ipport=&quot;192.168.1.101:1337&quot;&gt;<br/>    &lt;fisier marime=&quot;5106521&quot; md5=&quot;cbb9d1dc16378639d0877dbd75e676b3&quot; locatie=&quot;/home/p/audio/muzic&#x0103;/melodii/Carl Orff - O Fortuna.mp3&quot; /&gt;<br/>    &lt;fisier marime=&quot;4339429&quot; md5=&quot;f035856e998fa97c444a58668cb21c44&quot; locatie=&quot;/home/p/audio/muzic&#x0103;/melodii/Elvis Presley - Suspicious Minds.mp3&quot; /&gt;<br/>  &lt;/client&gt;<br/>  &lt;client nume=&quot;R&#x0103;zvan&quot; ipport=&quot;192.168.1.102:1337&quot;&gt;<br/>    &lt;fisier marime=&quot;9845479&quot; md5=&quot;eb9acbafae92f16f4ec7093fb5211a5e&quot; locatie=&quot;/home/p/audio/muzic&#x0103;/melodii/Franz Schubert - Ellen dritter Gesang (Ave Maria).mp3&quot; /&gt;<br/>    &lt;fisier marime=&quot;16354479&quot; md5=&quot;92be82e6b1f424f6334d077d5637764e&quot; locatie=&quot;/home/p/audio/muzic&#x0103;/melodii/Iron Butterfly - In A Gadda Da Vida.mp3&quot; /&gt;<br/>    &lt;fisier marime=&quot;3564726&quot; md5=&quot;f410d9d13387c322a4e2275eafaf9601&quot; locatie=&quot;/home/p/audio/muzic&#x0103;/melodii/Young Ewing Allison - Derelict.mp3&quot; /&gt;<br/>  &lt;/client&gt;<br/>&lt;/rezultate&gt;<br/>
+</pre>
+
+<p>Fiecare etichetă client are atributul ipport. Portul este cel trimis de client pe care este deschis serverul de transmitere de fișiere. IP-ul clientului a fost determinat la conectarea lui.</p>
+
+<p>Când clientul vrea să se deconecteze, nu trebuie să trimită nimic. Doar închide socket-ul.</p>
+
+<h2>Clientul</h2>
+
+<p>Este un program Qt scris în C++ cu intervață grafică. Intervața este organizată în trei tab-uri: tab-ul de conectare, tab-ul de căutare și tab-ul de vizualizare a descărcărilor. Fereastra mai conține și un statusbar.</p>
+
+<p>La deschidere se va căuta existența fișierului <i>sertari.xml</i> în dosarul acasa al utilizatorului. Dacă fișierul există din el va fi preluat numele utilizatorului, dosarul de împărțit, dosarul în care se va descărca și serverul (adresa IP și portul). Utilizatorul poate modifica astea până apasă pe butonul „Conectare”.<p>
+
+<p>Tot la deschidere, se caută un port deschis și se pornește serverul de transmitere de fișiere într-un thread separat.</p>
+
+<h3>Dacă e prima deschidere</h3>
+
+<p>La prima deschidere (adică fișierul <i>setari.xml</i> nu există) clientul va cere utilizatorului niște setări. Acestea vor fi: dosarul de descărcare, dosarul de împărțit și numele. Dacă dosarul de descărcare sau dosarul de împărțire nu există el va fi creat.</p>
+
+<p>Programul apoi va căuta toate fișierele din directorul de împărțit și va reține locația fiecărui fișier relativă la dosarul împărțit, suma MD5 și mărimea. Dacă dosarul este gol, nu va fi generat niciun fișier. Acest program nu impune limite de împărțire.</p>
+
+<p>După ce s-au luat toate aceste setări se generează fișierul setari.xml. Acesta o să arate cam așa:</p>
+
+<pre>
+&lt;setari server=&quot;127.0.0.1:11235&quot; impartit=&quot;/home/p/audio/muzic&#x0103;/melodii&quot; descarcare=&quot;/home/p&quot; nume=&quot;Paul2&quot; &gt;<br/>    &lt;fisier marime=&quot;5106521&quot; md5=&quot;cbb9d1dc16378639d0877dbd75e676b3&quot; locatie=&quot;/home/p/audio/muzic&#x0103;/melodii/Carl Orff - O Fortuna.mp3&quot; /&gt;<br/>    &lt;fisier marime=&quot;4339429&quot; md5=&quot;f035856e998fa97c444a58668cb21c44&quot; locatie=&quot;/home/p/audio/muzic&#x0103;/melodii/Elvis Presley - Suspicious Minds.mp3&quot; /&gt;<br/>    &lt;fisier marime=&quot;9845479&quot; md5=&quot;eb9acbafae92f16f4ec7093fb5211a5e&quot; locatie=&quot;/home/p/audio/muzic&#x0103;/melodii/Franz Schubert - Ellen dritter Gesang (Ave Maria).mp3&quot; /&gt;<br/>    &lt;fisier marime=&quot;16354479&quot; md5=&quot;92be82e6b1f424f6334d077d5637764e&quot; locatie=&quot;/home/p/audio/muzic&#x0103;/melodii/Iron Butterfly - In A Gadda Da Vida.mp3&quot; /&gt;<br/>    &lt;fisier marime=&quot;3564726&quot; md5=&quot;f410d9d13387c322a4e2275eafaf9601&quot; locatie=&quot;/home/p/audio/muzic&#x0103;/melodii/Young Ewing Allison - Derelict.mp3&quot; /&gt;<br/>&lt;/setari&gt;
+</pre>
+
+<h3>Dacă nu e prima deschidere</h3>
+
+<p>Programul verifică dacă există dosarul specificat la descarcare există. Dacă nu există el va fi creat și toate fișierele specificate în setări vor fi scoase. Dacă există se va verifica dacă fiecare fișier din setări există. Dacă nu există, va fi scos. Apoi este scanat tot dosarul de împărțire. Fișierele noi vor fi adaugate. Așa nu se mai calculeaza de fiecare dată suma md5 la fiecare deschidere. Fișierul setari.xml va fi rescris cu noile informații.</p>
+
+
+<h3>Cum este serverul de transfer se fișiere</h3>
+
+<p>După aceasta programul va căuta un port deschis. Pe acest port va deschide serverul de transfer de fișiere într-un thread separat. Pot fi servite mai multe fișiere simultan.</p>
+
+<p>Când alt client dorește un fișier de la clientul curent trimite o etichetă fisier de genul: <code>&lt;fisier marime=&quot;5106521&quot; md5=&quot;cbb9d1dc16378639d0877dbd75e676b3&quot; locatie=&quot;/home/p/audio/muzic&#x0103;/melodii/Carl Orff - O Fortuna.mp3&quot; /&gt;</code>. Dacă este găsit fișierul în lista de fișiere împărțite, se întoarce un număr care reprezintă mărimea fișierului (pentru verificare). Dacă nu există întoarce „-1” și închide conexiunea. După asta este adăugat într-o listă.</p>
+
+<p>Deoarece de acum încolo serverul doar trebuie să trimită fișierul (clientul nu trebuie să mai zică nimic) nu sunt folosite alte thread-uri și nici <code>select()</code>. Serverul doar scrie câte 100kiB la fiecare client într-o buclă. Când a terminat de trimis fișierul, închide conexiunea.</p>
+
+<h3>Cum se caută</h3>
+
+<p>Pentru a căuta se schimbă la tabul „Căutare”. Căutarea se poate face după MD5 și după nume și mărime. String-ul XML este transmis la server și el întoarce lista de clienți cu lista lor de fișiere de rezultate. Lista de rezultate va fi afișată într-un tabel.</p>
+
+<h3>Cum se descarcă</h3>
+
+<p>Pentru a descarca niște fișiere utilizatorul trebuie să selecteze niște linii din tabel și să apese butonul „Descarcă”. Fișierele for fi descarcare consecutiv și va fi arătat procentul de terminare.</p>
+
+<h3>Verificări</h3>
+
+<p>Programul face niște verificări asupra datelor. Vede dacă expresia regulată este validă înainte să o trimită la server. La fel se verifică intervalul și MD5-ul. La conectare se verifică dacă s-a ales un nume, dacă dosarele sunt valide și altele.</p>
+
+</body>
+</html>
