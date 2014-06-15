@@ -1,0 +1,5 @@
+*.o
+/*/Makefile
+/client/pp2p
+/client/moc_*
+/server/server
