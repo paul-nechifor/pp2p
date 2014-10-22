@@ -3,6 +3,8 @@
 A filesharing server and client similar to Direct Connect for Linux written in
 C++ with Qt. This was my [Computer Networks][1] project in my second year.
 
+![PP2P cover image.](screenshot.png)
+
 The [documentation][2] (in Romanian) is in the `doc.html` file.
 
 ## Install
