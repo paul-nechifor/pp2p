@@ -1,3 +1,7 @@
+# This repository has been moved to [gitlab.com/paul-nechifor/pp2p](http://gitlab.com/paul-nechifor/pp2p).
+
+Old readme:
+
 # PP2P
 
 A filesharing server and client similar to Direct Connect for Linux written in
